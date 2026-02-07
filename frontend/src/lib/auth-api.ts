@@ -64,7 +64,7 @@ export async function signUp(data: SignUpRequest): Promise<AuthResponse> {
 
     const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
     const cookieAttrs = [
-      `auth_token=${encodeURIComponent(demoToken)}`,
+      `auth_token=${demoToken}`,
       'path=/',
       `max-age=${60 * 60 * 24 * 7}`,
       'SameSite=Lax',
@@ -104,14 +104,14 @@ export async function signUp(data: SignUpRequest): Promise<AuthResponse> {
       if (result.access_token) {
         const isSecure = window.location.protocol === 'https:'
         const cookieAttrs = [
-          `auth_token=${encodeURIComponent(result.access_token)}`,
+          `auth_token=${result.access_token}`,
           'path=/',
           `max-age=${60 * 60 * 24 * 7}`,
           'SameSite=Lax',
           isSecure ? 'Secure' : '',
         ].filter(Boolean).join('; ')
         document.cookie = cookieAttrs
-        console.log('Token stored in cookie')
+        console.log('Token stored in cookie. Cookie value:', result.access_token.substring(0, 20) + '...')
       }
 
       return result
@@ -159,7 +159,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
 
     const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
     const cookieAttrs = [
-      `auth_token=${encodeURIComponent(demoToken)}`,
+      `auth_token=${demoToken}`,
       'path=/',
       `max-age=${60 * 60 * 24 * 7}`,
       'SameSite=Lax',
@@ -202,14 +202,14 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       if (result.access_token) {
         const isSecure = window.location.protocol === 'https:'
         const cookieAttrs = [
-          `auth_token=${encodeURIComponent(result.access_token)}`,
+          `auth_token=${result.access_token}`,
           'path=/',
           `max-age=${60 * 60 * 24 * 7}`,
           'SameSite=Lax',
           isSecure ? 'Secure' : '',
         ].filter(Boolean).join('; ')
         document.cookie = cookieAttrs
-        console.log('Token stored in cookie')
+        console.log('Token stored in cookie. Cookie value:', result.access_token.substring(0, 20) + '...')
       }
 
       return result
@@ -232,7 +232,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
 
 /**
  * Get the auth token from cookies
- * Uses a more robust parsing method that handles URL-encoded values
+ * Uses a more robust parsing method
  */
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
@@ -249,13 +249,14 @@ export function getAuthToken(): string | null {
 
     const token = cookies['auth_token']
     if (token) {
-      // URL decode the token in case it contains encoded characters
-      return decodeURIComponent(token)
+      console.log('[getAuthToken] Found token, length:', token.length)
+      return token
     }
   } catch (error) {
-    console.warn('Error parsing auth token from cookie:', error)
+    console.warn('[getAuthToken] Error parsing auth token from cookie:', error)
   }
 
+  console.log('[getAuthToken] No token found')
   return null
 }
 

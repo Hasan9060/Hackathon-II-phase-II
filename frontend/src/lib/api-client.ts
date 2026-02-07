@@ -23,7 +23,7 @@ const demoTasks = new Map<string, Task[]>()
 
 /**
  * Get the auth token from cookies
- * Uses a more robust parsing method that handles URL-encoded values
+ * Uses a more robust parsing method
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
@@ -40,13 +40,14 @@ function getAuthToken(): string | null {
 
     const token = cookies['auth_token']
     if (token) {
-      // URL decode the token in case it contains encoded characters
-      return decodeURIComponent(token)
+      console.log('[getAuthToken] Found token, length:', token.length)
+      return token
     }
   } catch (error) {
-    console.warn('Error parsing auth token from cookie:', error)
+    console.warn('[getAuthToken] Error parsing auth token from cookie:', error)
   }
 
+  console.log('[getAuthToken] No token found')
   return null
 }
 
@@ -75,16 +76,28 @@ class ApiClient {
   private async getHeaders(): Promise<HeadersInit> {
     const token = getAuthToken()
 
-    return {
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
     }
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+      console.log('[getHeaders] Authorization header set, token length:', token.length)
+    } else {
+      console.warn('[getHeaders] No token available, Authorization header NOT set')
+    }
+
+    return headers
   }
 
   /**
    * Makes an HTTP request with authentication
    */
   async request<T>(options: ApiRequestOptions): Promise<T> {
+    // Debug: Check if token is available
+    const debugToken = getAuthToken()
+    console.log('[ApiClient] Request to:', options.path, 'Token present:', !!debugToken, 'Token preview:', debugToken ? debugToken.substring(0, 20) + '...' : 'N/A')
+
     // Demo mode - simulate API responses
     if (DEMO_MODE) {
       console.log('Demo mode: Simulating', options.method, options.path)
@@ -125,6 +138,15 @@ class ApiClient {
     }
 
     const headers = await this.getHeaders()
+
+    console.log('[ApiClient] Fetching:', {
+      url: url.toString(),
+      method: options.method,
+      hasAuth: !!(headers as Record<string, string>)['Authorization'],
+      authHeaderPreview: (headers as Record<string, string>)['Authorization']
+        ? (headers as Record<string, string>)['Authorization']!.substring(0, 30) + '...'
+        : 'N/A',
+    })
 
     const response = await fetch(url.toString(), {
       method: options.method,
