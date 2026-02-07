@@ -62,7 +62,15 @@ export async function signUp(data: SignUpRequest): Promise<AuthResponse> {
       exp: Date.now() + 60 * 60 * 24 * 7 * 1000, // 7 days
     }))
 
-    document.cookie = `auth_token=${demoToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const cookieAttrs = [
+      `auth_token=${demoToken}`,
+      'path=/',
+      `max-age=${60 * 60 * 24 * 7}`,
+      'SameSite=Lax',
+      isSecure ? 'Secure' : '',
+    ].filter(Boolean).join('; ')
+    document.cookie = cookieAttrs
 
     return {
       access_token: demoToken,
@@ -92,9 +100,18 @@ export async function signUp(data: SignUpRequest): Promise<AuthResponse> {
       const result = await response.json()
       console.log('Signup success:', result)
 
-      // Set the token in a cookie
+      // Set the token in a cookie with proper security attributes
       if (result.access_token) {
-        document.cookie = `auth_token=${result.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+        const isSecure = window.location.protocol === 'https:'
+        const cookieAttrs = [
+          `auth_token=${result.access_token}`,
+          'path=/',
+          `max-age=${60 * 60 * 24 * 7}`,
+          'SameSite=Lax',
+          isSecure ? 'Secure' : '',
+        ].filter(Boolean).join('; ')
+        document.cookie = cookieAttrs
+        console.log('Token stored in cookie')
       }
 
       return result
@@ -140,7 +157,15 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       exp: Date.now() + 60 * 60 * 24 * 7 * 1000, // 7 days
     }))
 
-    document.cookie = `auth_token=${demoToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const cookieAttrs = [
+      `auth_token=${demoToken}`,
+      'path=/',
+      `max-age=${60 * 60 * 24 * 7}`,
+      'SameSite=Lax',
+      isSecure ? 'Secure' : '',
+    ].filter(Boolean).join('; ')
+    document.cookie = cookieAttrs
 
     return {
       access_token: demoToken,
@@ -173,9 +198,18 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       const result = await response.json()
       console.log('Signin success:', result)
 
-      // Set the token in a cookie
+      // Set the token in a cookie with proper security attributes
       if (result.access_token) {
-        document.cookie = `auth_token=${result.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+        const isSecure = window.location.protocol === 'https:'
+        const cookieAttrs = [
+          `auth_token=${result.access_token}`,
+          'path=/',
+          `max-age=${60 * 60 * 24 * 7}`,
+          'SameSite=Lax',
+          isSecure ? 'Secure' : '',
+        ].filter(Boolean).join('; ')
+        document.cookie = cookieAttrs
+        console.log('Token stored in cookie')
       }
 
       return result
@@ -211,6 +245,14 @@ export function getAuthToken(): string | null {
  */
 export function removeAuthToken(): void {
   if (typeof window !== 'undefined') {
-    document.cookie = 'auth_token=; path=/; max-age=0'
+    const isSecure = window.location.protocol === 'https:'
+    const cookieAttrs = [
+      'auth_token=',
+      'path=/',
+      'max-age=0',
+      'SameSite=Lax',
+      isSecure ? 'Secure' : '',
+    ].filter(Boolean).join('; ')
+    document.cookie = cookieAttrs
   }
 }
