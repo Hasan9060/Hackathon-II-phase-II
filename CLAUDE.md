@@ -208,3 +208,117 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+---
+
+# Todo AI Chatbot Project
+
+## Project Overview
+**Phase III:** Todo AI Chatbot - Create an AI-powered chatbot interface for managing todos through natural language using MCP (Model Context Protocol) server architecture.
+
+**Development Approach:** Use the Agentic Dev Stack workflow: Write spec → Generate plan → Break into tasks → Implement via Claude Code. No manual coding allowed.
+
+## Specialized Agent Usage
+
+### 1. Auth Agent (`auth-security-specialist`)
+**Use for:**
+- User signup/signin flows
+- Better Auth integration with JWT tokens
+- Secure password hashing and token generation
+- Session management and validation
+- JWT middleware and auth guards
+- User isolation and ownership checks
+- Security vulnerability reviews
+
+**When to invoke:**
+- Designing or implementing authentication flows
+- Debugging authentication failures or token validation issues
+- Adding protected routes requiring JWT verification
+- Reviewing auth code for security vulnerabilities
+
+### 2. Frontend Agent (`nextjs-ui-builder`)
+**Use for:**
+- Next.js App Router UI development
+- Creating responsive components and layouts
+- Building chat interfaces and conversational UIs
+- Implementing Server and Client Components
+- Mobile-first responsive design
+- Accessibility implementation
+
+**When to invoke:**
+- Generating UI code from feature specifications
+- Creating or refactoring React components
+- Building dashboard pages and chat interfaces
+- Ensuring App Router best practices
+
+### 3. DB Agent (`neon-database-architect`)
+**Use for:**
+- Database schema design and migrations
+- SQLModel/ORM integration with Neon PostgreSQL
+- Conversation state persistence design
+- Task storage and retrieval architecture
+- Data integrity and relationship management
+- Production data workload preparation
+
+**When to invoke:**
+- Designing database schemas for new features
+- Creating or reviewing database migrations
+- Debugging data consistency issues
+- Setting up Neon Serverless PostgreSQL integration
+
+### 4. Backend Agent (`fastapi-backend`)
+**Use for:**
+- FastAPI REST API implementation
+- JWT authentication middleware integration
+- Stateless chat endpoint development
+- Database interactions with SQLModel
+- API validation and security
+- User scoping and data isolation
+
+**When to invoke:**
+- Implementing REST API endpoints from specifications
+- Integrating authentication into protected routes
+- Building chat endpoints with state persistence
+- Debugging API validation or security issues
+
+## Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| Frontend | Next.js (App Router) |
+| Backend | Python FastAPI |
+| AI Framework | OpenAI Agents SDK |
+| MCP Server | Official MCP SDK |
+| ORM | SQLModel |
+| Database | Neon Serverless PostgreSQL |
+| Authentication | Better Auth (JWT tokens) |
+
+## Authentication Architecture
+
+Better Auth issues JWT tokens when users log in. These self-contained tokens include user information and are verified using a shared secret key.
+
+**Flow:**
+1. User logs in on Frontend → Better Auth creates session and issues JWT token
+2. Frontend API call → Includes JWT in `Authorization: Bearer <token>` header
+3. Backend receives request → Extracts and verifies token signature
+4. Backend identifies user → Decodes token to get user ID, email, etc.
+5. Backend filters data → Returns only tasks belonging to authenticated user
+
+## Key Requirements
+
+1. Conversational interface for all Basic Level features
+2. Stateless chat endpoint that persists conversation state to database
+3. AI agents use MCP tools (also stateless, storing state in database)
+4. MCP server exposes task operations as tools
+5. User isolation - all data scoped to authenticated user
+
+## Active Technologies
+- Python 3.11+ + FastAPI, SQLModel, psycopg2-binary, uvicorn, python-dotenv (001-backend-task-service)
+- Neon Serverless PostgreSQL (persistent, cloud-hosted) (001-backend-task-service)
+- Python 3.11+ + FastAPI 0.104+, python-jose[cryptography], PyJWT alternatives considered (002-jwt-auth)
+- Neon PostgreSQL (existing, no schema changes) (002-jwt-auth)
+- TypeScript 5.8+, JavaScript ES2022 + Next.js 16+, Better Auth (latest), React 19+, Tailwind CSS 4+ (003-frontend-ui)
+- No client-side storage (session via Better Auth cookies) (003-frontend-ui)
+
+## Recent Changes
+- 001-backend-task-service: Added Python 3.11+ + FastAPI, SQLModel, psycopg2-binary, uvicorn, python-dotenv

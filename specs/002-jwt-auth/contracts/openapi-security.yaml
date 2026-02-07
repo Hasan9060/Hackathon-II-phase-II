@@ -1,0 +1,344 @@
+# OpenAPI Security Scheme: JWT Authentication
+
+**Feature**: 002-jwt-auth
+**OpenAPI Version**: 3.1.0
+**Last Updated**: 2026-02-02
+
+This document defines the OpenAPI 3.1 security scheme for JWT authentication on the Backend Task Service API.
+
+---
+
+## Security Scheme Definition
+
+```yaml
+openapi: 3.1.0
+info:
+  title: Backend Task Service API
+  version: 2.0.0
+  description: Task management API with JWT authentication
+
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token issued by Better Auth.
+
+        Token must include:
+        - user_id: User's unique identifier
+        - email: User's email address
+        - iat: Issued at timestamp
+        - exp: Expiration timestamp
+
+        Algorithm: HS256
+        Secret: BETTER_AUTH_SECRET environment variable
+
+security:
+  - JWTAuth: []
+
+paths:
+  /api/{user_id}/tasks:
+    get:
+      summary: List user tasks
+      description: Retrieve all tasks for the authenticated user
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID (must match JWT user_id)
+      responses:
+        '200':
+          description: List of tasks
+        '401':
+          description: Unauthorized - Invalid or missing token
+        '403':
+          description: Forbidden - User ID mismatch
+
+    post:
+      summary: Create task
+      description: Create a new task for the authenticated user
+      security:
+        - JWTAuth: []
+      # ... rest of endpoint definition
+
+  /api/{user_id}/tasks/{task_id}:
+    get:
+      summary: Get task
+      description: Retrieve a specific task by ID
+      security:
+        - JWTAuth: []
+      # ... rest of endpoint definition
+
+    put:
+      summary: Update task
+      description: Update an existing task
+      security:
+        - JWTAuth: []
+      # ... rest of endpoint definition
+
+    delete:
+      summary: Delete task
+      description: Delete a task by ID
+      security:
+        - JWTAuth: []
+      # ... rest of endpoint definition
+
+  /api/{user_id}/tasks/{task_id}/complete:
+    patch:
+      summary: Toggle task completion
+      description: Toggle a task's completion status
+      security:
+        - JWTAuth: []
+      # ... rest of endpoint definition
+```
+
+---
+
+## Authentication Flow
+
+### 1. Client Request
+
+```http
+GET /api/user-123/tasks HTTP/1.1
+Host: api.example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlci0xMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3MzcyNjYwMDAsImV4cCI6MTczNzg3MDgwMH0.signature
+```
+
+### 2. Success Response (200 OK)
+
+```json
+[
+  {
+    "id": "064ac7c8-4b59-4d8e-9a77-282a9b55c39c",
+    "title": "Test task",
+    "description": "Testing JWT authentication",
+    "user_id": "user-123",
+    "is_completed": false,
+    "created_at": "2026-02-02T15:38:36.462221",
+    "updated_at": "2026-02-02T15:38:36.462233"
+  }
+]
+```
+
+### 3. Authentication Failure (401 Unauthorized)
+
+```json
+{
+  "detail": "Could not validate credentials"
+}
+```
+
+**Causes**:
+- Missing Authorization header
+- Invalid token format
+- Expired token
+- Invalid signature
+- Wrong authentication scheme
+
+### 4. Authorization Failure (403 Forbidden)
+
+```json
+{
+  "detail": "Access denied: user identity mismatch"
+}
+```
+
+**Cause**: `user_id` in JWT does not match `user_id` in URL path
+
+---
+
+## JWT Token Format
+
+### Structure
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlci0xMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3MzcyNjYwMDAsImV4cCI6MTczNzg3MDgwMH0.signature
+^──────────────────────────────────^ ^───────────────────────────────────────────────────────────────────────────────────────────────────────────────^ ^─────────^
+              Header                                          Payload                                                                                      Signature
+```
+
+### Header
+
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+### Payload
+
+```json
+{
+  "user_id": "user-123",
+  "email": "test@example.com",
+  "iat": 1737266000,
+  "exp": 1737870800
+}
+```
+
+### Signature
+
+- Algorithm: HMAC-SHA256 (HS256)
+- Secret: BETTER_AUTH_SECRET environment variable
+- Verification: Backend validates signature before accepting token
+
+---
+
+## Endpoint Security Matrix
+
+| Endpoint | Method | Security Required | User ID Check |
+|----------|--------|-------------------|---------------|
+| `/api/{user_id}/tasks` | GET | JWT | ✅ Yes |
+| `/api/{user_id}/tasks` | POST | JWT | ✅ Yes |
+| `/api/{user_id}/tasks/{task_id}` | GET | JWT | ✅ Yes |
+| `/api/{user_id}/tasks/{task_id}` | PUT | JWT | ✅ Yes |
+| `/api/{user_id}/tasks/{task_id}` | DELETE | JWT | ✅ Yes |
+| `/api/{user_id}/tasks/{task_id}/complete` | PATCH | JWT | ✅ Yes |
+
+**All endpoints require**:
+1. Valid JWT token in Authorization header
+2. Token user_id matches URL path user_id
+
+---
+
+## Swagger UI Integration
+
+When accessing `/docs` (Swagger UI), users will see:
+
+1. **Authorize Button**: A lock icon at the top of the page
+2. **Authorization Dialog**: Input for `Bearer` token value
+3. **Authenticated Requests**: All requests include the JWT token after authorization
+
+### How to Use in Swagger UI
+
+1. Click the "Authorize" button (lock icon)
+2. Enter your JWT token in the format: `Bearer <your-token>`
+3. Click "Authorize"
+4. Close the dialog
+5. All API requests now include the JWT token
+
+---
+
+## Code Examples
+
+### cURL
+
+```bash
+# With authentication
+curl -X GET \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  http://localhost:8000/api/user-123/tasks
+
+# Without authentication (will fail with 401)
+curl -X GET \
+  http://localhost:8000/api/user-123/tasks
+```
+
+### Python (requests)
+
+```python
+import requests
+
+headers = {
+    "Authorization": f"Bearer {jwt_token}"
+}
+
+response = requests.get(
+    "http://localhost:8000/api/user-123/tasks",
+    headers=headers
+)
+
+tasks = response.json()
+```
+
+### JavaScript (fetch)
+
+```javascript
+const headers = {
+  "Authorization": `Bearer ${jwtToken}`
+};
+
+fetch("http://localhost:8000/api/user-123/tasks", {
+  method: "GET",
+  headers: headers
+})
+  .then(response => response.json())
+  .then(tasks => console.log(tasks));
+```
+
+### TypeScript (axios)
+
+```typescript
+import axios from 'axios';
+
+const response = await axios.get('http://localhost:8000/api/user-123/tasks', {
+  headers: {
+    'Authorization': `Bearer ${jwtToken}`
+  }
+});
+
+const tasks = response.data;
+```
+
+---
+
+## Security Best Practices
+
+### For Token Transmission
+
+- ✅ Always use HTTPS in production
+- ✅ Include token in Authorization header (not URL or body)
+- ✅ Set appropriate token expiry (7 days recommended)
+- ❌ Never log tokens in server logs
+- ❌ Never include tokens in error messages
+
+### For Token Storage (Frontend)
+
+- ✅ Store in memory or httpOnly cookie
+- ✅ Use secure flag in production cookies
+- ✅ Implement token refresh before expiry
+- ❌ Never store in localStorage (XSS vulnerable)
+- ❌ Never expose tokens in URLs
+
+### For Token Validation (Backend)
+
+- ✅ Verify signature on every request
+- ✅ Check token expiration
+- ✅ Validate algorithm (reject "none")
+- ✅ Use strong secret (32+ characters)
+- ✅ Generic error messages (no information leakage)
+
+---
+
+## Testing with OpenAPI
+
+### Using Swagger UI
+
+1. Navigate to `http://localhost:8000/docs`
+2. Click "Authorize" button
+3. Enter `Bearer <your-test-token>`
+4. Try any endpoint
+5. Observe authentication/authorization behavior
+
+### Using OpenAPI Generator
+
+```bash
+# Generate TypeScript client
+openapi-generator-cli generate \
+  -i http://localhost:8000/openapi.json \
+  -g typescript-axios \
+  -o ./generated-client
+```
+
+---
+
+**OpenAPI Contract Status**: ✅ Complete
+**Compatible with**: OpenAPI 3.1.0
+**Security Scheme**: HTTP Bearer Authentication (JWT)

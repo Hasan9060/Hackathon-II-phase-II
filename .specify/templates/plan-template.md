@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Todo AI Chatbot Project - Required Gates:**
+
+- [ ] **Spec-First**: Feature specification approved before any implementation
+- [ ] **No Manual Coding**: All code generated via Claude Code from approved specs
+- [ ] **Separation of Concerns**: Backend (FastAPI), Auth (Better Auth), Frontend (Next.js) boundaries maintained
+- [ ] **Security by Design**: JWT verification on all protected endpoints; user isolation enforced
+- [ ] **Contract-Driven**: REST endpoints follow defined request/response contracts; OpenAPI docs accurate
+- [ ] **Environment Consistency**: BETTER_AUTH_SECRET shared across services; no hardcoded secrets
+- [ ] **Stack Compliance**: Next.js 16+, FastAPI, SQLModel, Neon PostgreSQL, Better Auth JWT mode
+- [ ] **Stateless Auth**: JWT tokens only; no session-based authentication
 
 ## Project Structure
 
