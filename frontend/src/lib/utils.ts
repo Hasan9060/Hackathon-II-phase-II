@@ -28,18 +28,22 @@ export function validateEnv(): void {
 
 /**
  * Gets the API base URL from environment
+ * Ensures no trailing slash to avoid double slashes in paths
  * @returns API base URL
  */
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+  return url.endsWith('/') ? url.slice(0, -1) : url
 }
 
 /**
  * Gets the app URL from environment
+ * Ensures no trailing slash to avoid double slashes in paths
  * @returns App URL
  */
 export function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const url = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  return url.endsWith('/') ? url.slice(0, -1) : url
 }
 
 // ============================================

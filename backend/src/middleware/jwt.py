@@ -16,11 +16,14 @@ async def jwt_auth_middleware(request: Request, call_next) -> Response:
     # Skip JWT for public endpoints
     path = request.url.path
 
+    # Normalize path: remove leading double slashes
+    normalized_path = path[1:] if path.startswith("//") else path
+
     # Public paths that don't need authentication
     public_paths = ["/", "/health", "/docs", "/openapi.json", "/redoc"]
 
-    # Skip if path starts with /api/auth/
-    if path.startswith("/api/auth/") or path in public_paths:
+    # Skip if path starts with /api/auth/ (handle both /api/auth/ and //api/auth/)
+    if normalized_path.startswith("/api/auth/") or normalized_path in public_paths:
         return await call_next(request)
 
     # Get Authorization header
