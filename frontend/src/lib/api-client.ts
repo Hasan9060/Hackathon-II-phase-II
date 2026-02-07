@@ -23,12 +23,31 @@ const demoTasks = new Map<string, Task[]>()
 
 /**
  * Get the auth token from cookies
+ * Uses a more robust parsing method that handles URL-encoded values
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
 
-  const match = document.cookie.match(new RegExp('(^| )' + 'auth_token' + '=([^;]+)'))
-  return match ? match[2] : null
+  try {
+    // Parse cookies more robustly
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [name, value] = cookie.trim().split('=')
+      if (name && value !== undefined) {
+        acc[name] = value
+      }
+      return acc
+    }, {} as Record<string, string>)
+
+    const token = cookies['auth_token']
+    if (token) {
+      // URL decode the token in case it contains encoded characters
+      return decodeURIComponent(token)
+    }
+  } catch (error) {
+    console.warn('Error parsing auth token from cookie:', error)
+  }
+
+  return null
 }
 
 /**
